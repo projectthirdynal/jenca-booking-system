@@ -1,8 +1,8 @@
 -- Jenca Aesthetics Booking System — Initial Schema
 -- Run this in the Supabase SQL editor
 
--- Enable extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable extensions (pgcrypto provides gen_random_uuid())
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Create enums
 CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'completed', 'cancelled', 'no_show');
@@ -12,7 +12,7 @@ CREATE TYPE notification_status AS ENUM ('queued', 'sent', 'failed', 'delivered'
 
 -- Services table
 CREATE TABLE services (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     description TEXT,
     duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),
@@ -25,7 +25,7 @@ CREATE TABLE services (
 
 -- Service images table
 CREATE TABLE service_images (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_id UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
     file_path TEXT NOT NULL,
     alt_text TEXT,
@@ -35,7 +35,7 @@ CREATE TABLE service_images (
 
 -- Bookings table
 CREATE TABLE bookings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_id UUID NOT NULL REFERENCES services(id) ON DELETE RESTRICT,
     booking_date DATE NOT NULL,
     booking_time TIME NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE bookings (
     client_phone TEXT NOT NULL,
     client_email TEXT NOT NULL,
     status booking_status NOT NULL DEFAULT 'confirmed',
-    booking_token UUID NOT NULL DEFAULT uuid_generate_v4(),
+    booking_token UUID NOT NULL DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -60,7 +60,7 @@ CREATE UNIQUE INDEX bookings_token_unique
 
 -- Notifications table
 CREATE TABLE notifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
     type notification_type NOT NULL,
     channel notification_channel NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE notifications (
 
 -- Content blocks table (mini-CMS)
 CREATE TABLE content_blocks (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     block_key TEXT NOT NULL UNIQUE,
     content TEXT NOT NULL DEFAULT '',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -79,7 +79,7 @@ CREATE TABLE content_blocks (
 
 -- Media assets table
 CREATE TABLE media_assets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     file_path TEXT NOT NULL,
     asset_type TEXT NOT NULL DEFAULT 'gallery',
     alt_text TEXT,
@@ -88,7 +88,7 @@ CREATE TABLE media_assets (
 
 -- Availability settings table
 CREATE TABLE availability_settings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
     open_time TIME NOT NULL DEFAULT '09:00',
     close_time TIME NOT NULL DEFAULT '17:00',
@@ -98,7 +98,7 @@ CREATE TABLE availability_settings (
 
 -- Blackout dates table
 CREATE TABLE blackout_dates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     blocked_date DATE NOT NULL UNIQUE,
     reason TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
