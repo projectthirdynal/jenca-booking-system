@@ -17,6 +17,14 @@ export async function PUT(
   }
 
   const body = await request.json();
+
+  if (!body.name || !body.name.trim()) {
+    return NextResponse.json(
+      { error: { code: 'VALIDATION_ERROR', message: 'Service name is required' } },
+      { status: 422 }
+    );
+  }
+
   const serviceClient = createServiceClient();
 
   const { data, error } = await serviceClient

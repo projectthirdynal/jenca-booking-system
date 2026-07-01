@@ -23,9 +23,11 @@ export function ServiceCard({ service }: ServiceCardProps) {
         </div>
       )}
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-xl font-semibold text-neutral-900">
-          {service.name}
-        </h3>
+        <Link href={`/services/${service.id}`}>
+          <h3 className="font-display text-xl font-semibold text-neutral-900 hover:text-brand-600 transition-colors">
+            {service.name}
+          </h3>
+        </Link>
         {service.description && (
           <p className="mt-2 text-sm text-neutral-600 line-clamp-2">
             {service.description}
