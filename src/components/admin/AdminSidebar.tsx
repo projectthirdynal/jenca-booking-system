@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Calendar, Scissors, Clock, FileText, Palette, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, Scissors, Clock, FileText, Palette, Image as ImageIcon, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { href: '/admin/availability', label: 'Availability', icon: Clock },
   { href: '/admin/content', label: 'Content', icon: FileText },
   { href: '/admin/branding', label: 'Branding', icon: Palette },
+  { href: '/admin/gallery', label: 'Gallery', icon: ImageIcon },
 ];
 
 export function AdminSidebar() {

@@ -10,16 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: '#fdf2f8',
-          100: '#fce7f3',
-          200: '#fbcfe8',
-          300: '#f9a8d4',
-          400: '#f472b6',
-          500: '#ec4899',
-          600: '#db2777',
-          700: '#be185d',
-          800: '#9d174d',
-          900: '#831843',
+          50: '#fdf8f7',
+          100: '#faeeec',
+          200: '#f5d9d5',
+          300: '#edb8b1',
+          400: '#e08e84',
+          500: '#d06a5e',
+          600: '#be4e41',
+          700: '#a83e33',
+          800: '#8c342b',
+          900: '#722e27',
+          950: '#3f1714',
         },
         neutral: {
           50: '#fafafa',
@@ -36,7 +37,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-playfair-display)', 'Georgia', 'serif'],
+        display: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         'xl': '0.875rem',
