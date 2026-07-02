@@ -108,6 +108,7 @@ export default async function ManageBookingPage({
           bookingDate={booking.booking_date}
           bookingTime={booking.booking_time}
           serviceName={booking.service?.name || ''}
+          serviceId={booking.service?.id || ''}
         />
       )}
 

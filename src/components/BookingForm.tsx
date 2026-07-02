@@ -75,7 +75,11 @@ export function BookingForm({
 
       if (!response.ok) {
         const result = await response.json();
-        setSubmitError(result.error?.message || 'Failed to create booking. Please try again.');
+        if (response.status === 409) {
+          setSubmitError('That time slot was just taken. Please select another time above.');
+        } else {
+          setSubmitError(result.error?.message || 'Failed to create booking. Please try again.');
+        }
         setIsSubmitting(false);
         return;
       }
