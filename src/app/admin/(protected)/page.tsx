@@ -1,4 +1,4 @@
-import { Calendar, Scissors, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, Scissors, Clock, AlertCircle, TrendingUp, CalendarDays } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatTime, formatPHP } from '@/lib/utils';
 
@@ -6,17 +6,38 @@ async function getStats() {
   const supabase = createClient();
 
   const today = new Date().toISOString().split('T')[0];
+  const weekFromNow = new Date();
+  weekFromNow.setDate(weekFromNow.getDate() + 7);
+  const weekFromNowStr = weekFromNow.toISOString().split('T')[0];
 
-  const [{ count: todayBookings }, { count: totalServices }, { count: failedNotifications }] = await Promise.all([
+  const [
+    { count: todayBookings },
+    { count: totalServices },
+    { count: failedNotifications },
+    { data: weekBookings },
+  ] = await Promise.all([
     supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('booking_date', today).neq('status', 'cancelled'),
     supabase.from('services').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('status', 'failed'),
+    supabase
+      .from('bookings')
+      .select('*, service:services(price_php)')
+      .gte('booking_date', today)
+      .lte('booking_date', weekFromNowStr)
+      .neq('status', 'cancelled'),
   ]);
+
+  const weeklyRevenue = (weekBookings || []).reduce(
+    (sum, b) => sum + (b.service?.price_php || 0),
+    0
+  );
 
   return {
     todayBookings: todayBookings || 0,
     totalServices: totalServices || 0,
     failedNotifications: failedNotifications || 0,
+    upcomingWeekCount: weekBookings?.length || 0,
+    weeklyRevenue,
   };
 }
 
@@ -43,7 +64,7 @@ export default async function AdminDashboardPage() {
       <h1 className="font-display text-2xl font-bold text-neutral-900">Dashboard</h1>
       <p className="mt-1 text-sm text-neutral-500">Overview of your clinic&apos;s bookings and activity.</p>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="card p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-100">
@@ -59,7 +80,31 @@ export default async function AdminDashboardPage() {
         <div className="card p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-              <Scissors className="h-5 w-5 text-blue-600" />
+              <CalendarDays className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-neutral-900">{stats.upcomingWeekCount}</p>
+              <p className="text-sm text-neutral-500">This week</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-neutral-900">{formatPHP(stats.weeklyRevenue)}</p>
+              <p className="text-sm text-neutral-500">Week revenue</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+              <Scissors className="h-5 w-5 text-purple-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-neutral-900">{stats.totalServices}</p>
@@ -75,7 +120,7 @@ export default async function AdminDashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-neutral-900">{stats.failedNotifications}</p>
-              <p className="text-sm text-neutral-500">Failed notifications</p>
+              <p className="text-sm text-neutral-500">Failed notifs</p>
             </div>
           </div>
         </div>
