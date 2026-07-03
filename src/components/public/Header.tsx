@@ -56,7 +56,7 @@ export function Header() {
             href="/find-booking"
             className="text-sm font-medium text-neutral-600 transition-colors hover:text-brand-600"
           >
-            Find My Bookings
+            Recover Bookings
           </Link>
           <Link href="/book">
             <Button size="sm">
@@ -101,7 +101,7 @@ export function Header() {
               onClick={() => setMobileOpen(false)}
               className="block rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-600 hover:bg-neutral-50"
             >
-              Find My Bookings
+              Recover Bookings
             </Link>
             <Link href="/book" onClick={() => setMobileOpen(false)} className="block pt-2">
               <Button size="md" className="w-full">
