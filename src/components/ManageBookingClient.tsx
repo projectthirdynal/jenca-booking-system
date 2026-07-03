@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { DatePicker } from '@/components/DatePicker';
 import { TimeSlotPicker } from '@/components/TimeSlotPicker';
-import { AlertCircle, Loader2, Calendar, Clock } from 'lucide-react';
+import { AlertCircle, Loader2, Calendar, Clock, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { formatDate, formatTime } from '@/lib/utils';
 
 interface ManageBookingClientProps {
   token: string;
@@ -14,6 +15,15 @@ interface ManageBookingClientProps {
   serviceName: string;
   serviceId: string;
 }
+
+const CANCEL_REASONS = [
+  'Schedule conflict',
+  'Feeling unwell',
+  'Transportation issue',
+  'No longer needed',
+  'Will rebook later',
+  'Other',
+];
 
 export function ManageBookingClient({
   token,
@@ -26,6 +36,8 @@ export function ManageBookingClient({
   const [isCancelling, setIsCancelling] = useState(false);
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [showReschedule, setShowReschedule] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -77,8 +89,6 @@ export function ManageBookingClient({
   }, [newDate, fetchSlots]);
 
   const handleCancel = async () => {
-    if (!confirm('Are you sure you want to cancel this appointment? This action cannot be undone.')) return;
-
     setIsCancelling(true);
     setError(null);
 
@@ -86,7 +96,7 @@ export function ManageBookingClient({
       const response = await fetch(`/api/bookings/token/${token}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'cancel' }),
+        body: JSON.stringify({ action: 'cancel', reason: cancelReason || undefined }),
       });
 
       if (!response.ok) {
@@ -97,6 +107,7 @@ export function ManageBookingClient({
       }
 
       setSuccessMsg('Your booking has been cancelled. You can book a new appointment anytime.');
+      setShowCancelConfirm(false);
       setShowReschedule(false);
       setIsCancelling(false);
       router.refresh();
@@ -154,30 +165,24 @@ export function ManageBookingClient({
 
       {successMsg && (
         <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-4">
-          <Calendar className="h-4 w-4 text-green-600" />
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
           <p className="text-sm text-green-700">{successMsg}</p>
         </div>
       )}
 
-      {!showReschedule && !successMsg && (
+      {/* Action buttons */}
+      {!showReschedule && !showCancelConfirm && !successMsg && (
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             variant="danger"
-            onClick={handleCancel}
-            disabled={isCancelling}
+            onClick={() => setShowCancelConfirm(true)}
             className="flex-1"
           >
-            {isCancelling ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Cancelling...
-              </>
-            ) : 'Cancel appointment'}
+            Cancel appointment
           </Button>
           <Button
             variant="secondary"
             onClick={() => setShowReschedule(true)}
-            disabled={isCancelling}
             className="flex-1"
           >
             <Calendar className="mr-2 h-4 w-4" />
@@ -186,6 +191,65 @@ export function ManageBookingClient({
         </div>
       )}
 
+      {/* Cancel confirmation with reason */}
+      {showCancelConfirm && (
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-lg font-semibold text-neutral-900">
+              Cancel appointment
+            </h3>
+            <button
+              onClick={() => { setShowCancelConfirm(false); setCancelReason(''); }}
+              className="text-sm text-neutral-500 hover:text-neutral-700"
+            >
+              Back
+            </button>
+          </div>
+
+          <p className="text-sm text-neutral-500 mb-4">
+            Please let us know why you&apos;re cancelling (optional). This helps us improve our service.
+          </p>
+
+          <div className="space-y-2">
+            {CANCEL_REASONS.map((reason) => (
+              <label key={reason} className="flex items-center gap-2 cursor-pointer rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50">
+                <input
+                  type="radio"
+                  name="cancelReason"
+                  value={reason}
+                  checked={cancelReason === reason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="h-4 w-4 text-brand-600 focus:ring-brand-500"
+                />
+                <span className="text-sm text-neutral-700">{reason}</span>
+              </label>
+            ))}
+          </div>
+
+          <div className="mt-4 flex gap-3">
+            <Button
+              variant="danger"
+              onClick={handleCancel}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelling...
+                </>
+              ) : 'Yes, cancel my appointment'}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => { setShowCancelConfirm(false); setCancelReason(''); }}
+            >
+              Keep appointment
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule flow */}
       {showReschedule && (
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
@@ -205,10 +269,31 @@ export function ManageBookingClient({
             </button>
           </div>
 
+          {/* Old → New comparison */}
+          <div className="mb-4 rounded-lg bg-neutral-50 border border-neutral-200 p-4">
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex-1">
+                <p className="text-xs text-neutral-400 mb-1">Current</p>
+                <p className="font-medium text-neutral-900">{formatDate(bookingDate)}</p>
+                <p className="text-neutral-500">{formatTime(bookingTime)}</p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-neutral-300" />
+              <div className="flex-1">
+                <p className="text-xs text-neutral-400 mb-1">New</p>
+                {newDate && newTime ? (
+                  <>
+                    <p className="font-medium text-brand-700">{formatDate(newDate)}</p>
+                    <p className="text-brand-600">{formatTime(newTime)}</p>
+                  </>
+                ) : (
+                  <p className="text-neutral-400">Select below</p>
+                )}
+              </div>
+            </div>
+          </div>
+
           <p className="text-sm text-neutral-500 mb-4">
-            Current: {serviceName} on{' '}
-            <strong>{new Date(bookingDate + 'T00:00:00').toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric' })}</strong>{' '}
-            at <strong>{new Date(`2000-01-01T${bookingTime}`).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</strong>
+            {serviceName}
           </p>
 
           <div className="max-w-md">

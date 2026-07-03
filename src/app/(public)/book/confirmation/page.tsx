@@ -1,4 +1,5 @@
-import { CheckCircle2, Mail, Phone, Calendar } from 'lucide-react';
+import Link from 'next/link';
+import { CheckCircle2, Mail, Phone, Calendar, Clock, Scissors, Tag, CalendarPlus, ArrowRight, ExternalLink } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatTime, formatPHP } from '@/lib/utils';
 
@@ -10,6 +11,19 @@ async function getBooking(token: string) {
     .eq('booking_token', token)
     .single();
   return data;
+}
+
+function buildGoogleCalendarLink(booking: {
+  booking_date: string;
+  booking_time: string;
+  service?: { name: string; duration_minutes: number };
+}): string {
+  const start = new Date(`${booking.booking_date}T${booking.booking_time}`);
+  const end = new Date(start.getTime() + (booking.service?.duration_minutes || 30) * 60000);
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const text = encodeURIComponent(`Jenca Aesthetics — ${booking.service?.name || 'Appointment'}`);
+  const details = encodeURIComponent('Booked via Jenca Aesthetics online booking system.');
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${fmt(start)}/${fmt(end)}&details=${details}`;
 }
 
 export default async function ConfirmationPage({
@@ -45,6 +59,9 @@ export default async function ConfirmationPage({
     );
   }
 
+  const bookingRef = booking.booking_token.substring(0, 8).toUpperCase();
+  const calendarLink = buildGoogleCalendarLink(booking);
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="text-center">
@@ -57,6 +74,10 @@ export default async function ConfirmationPage({
         <p className="mt-2 text-neutral-600">
           We&apos;ve sent a confirmation to your email and phone.
         </p>
+        <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-neutral-100 px-4 py-2">
+          <span className="text-xs text-neutral-500">Booking reference</span>
+          <span className="font-mono text-sm font-bold text-neutral-900">{bookingRef}</span>
+        </div>
       </div>
 
       <div className="mt-8 card p-6">
@@ -65,7 +86,9 @@ export default async function ConfirmationPage({
         </h2>
         <dl className="mt-4 space-y-3">
           <div className="flex justify-between border-b border-neutral-100 pb-3">
-            <dt className="text-sm text-neutral-500">Service</dt>
+            <dt className="text-sm text-neutral-500 flex items-center gap-1.5">
+              <Scissors className="h-4 w-4" /> Service
+            </dt>
             <dd className="text-sm font-medium text-neutral-900">
               {booking.service?.name}
             </dd>
@@ -79,7 +102,9 @@ export default async function ConfirmationPage({
             </dd>
           </div>
           <div className="flex justify-between border-b border-neutral-100 pb-3">
-            <dt className="text-sm text-neutral-500">Time</dt>
+            <dt className="text-sm text-neutral-500 flex items-center gap-1.5">
+              <Clock className="h-4 w-4" /> Time
+            </dt>
             <dd className="text-sm font-medium text-neutral-900">
               {formatTime(booking.booking_time)}
             </dd>
@@ -91,13 +116,43 @@ export default async function ConfirmationPage({
             </dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-sm text-neutral-500">Price</dt>
+            <dt className="text-sm text-neutral-500 flex items-center gap-1.5">
+              <Tag className="h-4 w-4" /> Price
+            </dt>
             <dd className="text-sm font-medium text-brand-700">
               {booking.service ? formatPHP(booking.service.price_php) : '—'}
             </dd>
           </div>
         </dl>
       </div>
+
+      {/* Action buttons */}
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <a
+          href={calendarLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 rounded-lg border border-neutral-200 px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+        >
+          <CalendarPlus className="h-4 w-4" />
+          Add to Calendar
+        </a>
+        <Link
+          href={`/manage/${booking.booking_token}`}
+          className="flex items-center justify-center gap-2 rounded-lg border border-neutral-200 px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Manage booking
+        </Link>
+      </div>
+
+      <Link
+        href="/book"
+        className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
+      >
+        Book another appointment
+        <ArrowRight className="h-4 w-4" />
+      </Link>
 
       <div className="mt-6 rounded-lg bg-brand-50 border border-brand-100 p-4">
         <div className="flex items-start gap-3">
