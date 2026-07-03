@@ -195,6 +195,8 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/bookings', label: 'Bookings' },
     { href: '/admin/services', label: 'Services' },
+    { href: '/admin/staff', label: 'Staff' },
+    { href: '/admin/customers', label: 'Customers' },
     { href: '/admin/availability', label: 'Availability' },
     { href: '/admin/content', label: 'Content' },
     { href: '/admin/branding', label: 'Branding' },

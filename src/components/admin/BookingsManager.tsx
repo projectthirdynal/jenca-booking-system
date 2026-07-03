@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, Filter, Download, X, ChevronLeft, ChevronRight, Phone, Mail, Calendar, Clock, Scissors, Tag } from 'lucide-react';
+import { Search, Filter, Download, X, ChevronLeft, ChevronRight, Phone, Mail, Calendar, Clock, Scissors, Tag, Loader2 } from 'lucide-react';
 import { BookingsCalendar } from '@/components/admin/BookingsCalendar';
 import { BookingActions } from '@/components/admin/BookingActions';
 import { formatDate, formatTime, formatPHP, cn } from '@/lib/utils';
@@ -16,13 +16,16 @@ interface Booking {
   booking_time: string;
   status: string;
   booking_token?: string;
+  staff_id?: string | null;
   created_at?: string;
   service?: { name: string; price_php: number; duration_minutes?: number };
   notifications?: { status: string; type: string; channel: string }[];
+  staff?: { id: string; name: string; role: string } | null;
 }
 
 interface BookingsManagerProps {
   bookings: Booking[];
+  staff?: { id: string; name: string; role: string; is_active: boolean }[];
 }
 
 const STATUS_OPTIONS = [
@@ -44,7 +47,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 const ITEMS_PER_PAGE = 15;
 
-export function BookingsManager({ bookings: initialBookings }: BookingsManagerProps) {
+export function BookingsManager({ bookings: initialBookings, staff = [] }: BookingsManagerProps) {
   const searchParams = useSearchParams();
   const [bookings, setBookings] = useState(initialBookings);
   const [search, setSearch] = useState('');
@@ -272,6 +275,7 @@ export function BookingsManager({ bookings: initialBookings }: BookingsManagerPr
           booking={selectedBooking}
           onClose={() => setSelectedBooking(null)}
           onStatusChange={handleStatusChange}
+          staff={staff}
         />
       )}
     </div>
@@ -282,11 +286,29 @@ function BookingDrawer({
   booking,
   onClose,
   onStatusChange,
+  staff = [],
 }: {
   booking: Booking;
   onClose: () => void;
   onStatusChange: (id: string, status: string) => void;
+  staff?: { id: string; name: string; role: string; is_active: boolean }[];
 }) {
+  const [selectedStaffId, setSelectedStaffId] = useState(booking.staff_id || '');
+  const [savingStaff, setSavingStaff] = useState(false);
+
+  const handleStaffAssign = async (staffId: string) => {
+    setSelectedStaffId(staffId);
+    setSavingStaff(true);
+    try {
+      await fetch(`/api/bookings/${booking.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staff_id: staffId || null }),
+      });
+    } finally {
+      setSavingStaff(false);
+    }
+  };
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
@@ -385,6 +407,26 @@ function BookingDrawer({
               </p>
             </div>
           )}
+
+          <div>
+            <h4 className="text-xs font-medium uppercase tracking-wider text-neutral-400">Assigned staff</h4>
+            <div className="mt-2 flex items-center gap-2">
+              <select
+                value={selectedStaffId}
+                onChange={(e) => handleStaffAssign(e.target.value)}
+                disabled={savingStaff}
+                className="input-field flex-1"
+              >
+                <option value="">Unassigned</option>
+                {staff.filter((s) => s.is_active).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} — {s.role}
+                  </option>
+                ))}
+              </select>
+              {savingStaff && <Loader2 className="h-4 w-4 animate-spin text-neutral-400" />}
+            </div>
+          </div>
 
           {booking.booking_token && (
             <a

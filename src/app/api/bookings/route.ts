@@ -15,7 +15,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('bookings')
-    .select('*, service:services(*), notifications(*)')
+    .select('*, service:services(*), notifications(*), staff:staff(*), customer:customers(*)')
     .order('booking_date', { ascending: false })
     .order('booking_time', { ascending: false });
 
@@ -199,6 +199,48 @@ export async function POST(request: Request) {
       { error: { code: 'INTERNAL_ERROR', message: 'Failed to create booking' } },
       { status: 500 }
     );
+  }
+
+  // Upsert customer record by email
+  try {
+    const { data: existingCustomer } = await serviceClient
+      .from('customers')
+      .select('id')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    let customerId: string | null = null;
+
+    if (existingCustomer) {
+      customerId = existingCustomer.id;
+      await serviceClient
+        .from('customers')
+        .update({
+          name: booking.client_name,
+          phone: normalizedPhone,
+        })
+        .eq('id', customerId);
+    } else {
+      const { data: newCustomer } = await serviceClient
+        .from('customers')
+        .insert({
+          name: booking.client_name,
+          phone: normalizedPhone,
+          email: normalizedEmail,
+        })
+        .select()
+        .single();
+      customerId = newCustomer?.id || null;
+    }
+
+    if (customerId) {
+      await serviceClient
+        .from('bookings')
+        .update({ customer_id: customerId })
+        .eq('id', booking.id);
+    }
+  } catch {
+    // Customer upsert failure should not block booking creation
   }
 
   // Send notifications (fire and forget, log failures)

@@ -1,6 +1,7 @@
 import { Calendar, Scissors, Clock, AlertCircle, TrendingUp, CalendarDays, CheckCircle2, XCircle, UserX } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDate, formatTime, formatPHP } from '@/lib/utils';
+import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 
 async function getStats() {
   const supabase = createClient();
@@ -344,6 +345,9 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Advanced Analytics */}
+      <AnalyticsDashboard />
     </div>
   );
 }

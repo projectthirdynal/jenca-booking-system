@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Calendar, Scissors, Clock, FileText, Palette, Image as ImageIcon, Settings } from 'lucide-react';
+import { LayoutDashboard, Calendar, Scissors, Users, Contact, Clock, FileText, Palette, Image as ImageIcon, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/bookings', label: 'Bookings', icon: Calendar },
   { href: '/admin/services', label: 'Services', icon: Scissors },
+  { href: '/admin/staff', label: 'Staff', icon: Users },
+  { href: '/admin/customers', label: 'Customers', icon: Contact },
   { href: '/admin/availability', label: 'Availability', icon: Clock },
   { href: '/admin/content', label: 'Content', icon: FileText },
   { href: '/admin/branding', label: 'Branding', icon: Palette },

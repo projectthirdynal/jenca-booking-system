@@ -26,6 +26,7 @@ export async function PUT(
   if (body.status) updateData.status = body.status;
   if (body.booking_date) updateData.booking_date = body.booking_date;
   if (body.booking_time) updateData.booking_time = body.booking_time;
+  if (body.staff_id !== undefined) updateData.staff_id = body.staff_id || null;
 
   const { data, error } = await serviceClient
     .from('bookings')

@@ -10,14 +10,23 @@ async function getBookings() {
   const supabase = createClient();
   const { data } = await supabase
     .from('bookings')
-    .select('*, service:services(*), notifications(*)')
+    .select('*, service:services(*), notifications(*), staff:staff(*)')
     .order('booking_date', { ascending: false })
     .order('booking_time', { ascending: false });
   return data || [];
 }
 
+async function getStaff() {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from('staff')
+    .select('id, name, role, is_active')
+    .order('name');
+  return data || [];
+}
+
 export default async function AdminBookingsPage() {
-  const bookings = await getBookings();
+  const [bookings, staff] = await Promise.all([getBookings(), getStaff()]);
 
   return (
     <div>
@@ -26,7 +35,7 @@ export default async function AdminBookingsPage() {
         View and manage all client appointments.
       </p>
 
-      <BookingsManager bookings={bookings} />
+      <BookingsManager bookings={bookings} staff={staff} />
     </div>
   );
 }
