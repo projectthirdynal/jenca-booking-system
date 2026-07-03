@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Calendar, Clock, CheckCircle2, AlertCircle, Loader2,
@@ -46,6 +46,11 @@ export function BookingWizard({ services, preselectedServiceId }: BookingWizardP
 
   // Search
   const [serviceSearch, setServiceSearch] = useState('');
+
+  // Returning customer autofill
+  const [autofillNotice, setAutofillNotice] = useState<string | null>(null);
+  const [autofillLoading, setAutofillLoading] = useState(false);
+  const lastLookupEmail = useRef<string>('');
 
   const selectedService = services.find((s) => s.id === selectedServiceId);
 
@@ -114,6 +119,44 @@ export function BookingWizard({ services, preselectedServiceId }: BookingWizardP
     setSelectedTime(null);
   };
 
+  const handleEmailBlur = async () => {
+    const email = clientEmail.trim().toLowerCase();
+    if (!email || !email.includes('@')) return;
+    if (email === lastLookupEmail.current) return;
+    lastLookupEmail.current = email;
+
+    setAutofillLoading(true);
+    setAutofillNotice(null);
+
+    try {
+      const res = await fetch(`/api/bookings/lookup?email=${encodeURIComponent(email)}`);
+      if (!res.ok) { setAutofillLoading(false); return; }
+      const { data } = await res.json();
+
+      if (data && data.length > 0) {
+        const latest = data[0];
+        if (!clientName.trim() && latest.client_name) {
+          setClientName(latest.client_name);
+        }
+        if (!clientPhone.trim() && latest.client_phone) {
+          setClientPhone(latest.client_phone);
+        }
+        setAutofillNotice(`Welcome back! We've pre-filled your details from your last booking.`);
+      }
+    } catch {
+      // Silent fail — autofill is a convenience
+    } finally {
+      setAutofillLoading(false);
+    }
+  };
+
+  const checkDetailsValid = () => {
+    if (!clientName.trim() || clientName.trim().length < 2) return false;
+    if (!clientPhone.trim()) return false;
+    if (!clientEmail.trim() || !clientEmail.includes('@')) return false;
+    return true;
+  };
+
   const validateDetails = () => {
     const errors: Record<string, string> = {};
     if (!clientName.trim() || clientName.trim().length < 2) {
@@ -132,7 +175,7 @@ export function BookingWizard({ services, preselectedServiceId }: BookingWizardP
   const canProceed = () => {
     if (step === 0) return !!selectedServiceId;
     if (step === 1) return !!selectedDate && !!selectedTime;
-    if (step === 2) return validateDetails();
+    if (step === 2) return checkDetailsValid();
     if (step === 3) return agreedToTerms;
     return false;
   };
@@ -367,7 +410,7 @@ export function BookingWizard({ services, preselectedServiceId }: BookingWizardP
                   <input
                     type="text"
                     value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
+                    onChange={(e) => { setClientName(e.target.value); if (formErrors.client_name) setFormErrors({}); }}
                     placeholder="Juan Dela Cruz"
                     className="input-field pl-9"
                     autoComplete="name"
@@ -387,7 +430,7 @@ export function BookingWizard({ services, preselectedServiceId }: BookingWizardP
                   <input
                     type="tel"
                     value={clientPhone}
-                    onChange={(e) => setClientPhone(e.target.value)}
+                    onChange={(e) => { setClientPhone(e.target.value); if (formErrors.client_phone) setFormErrors({}); }}
                     placeholder="0917 123 4567"
                     className="input-field pl-9"
                     autoComplete="tel"
@@ -410,7 +453,8 @@ export function BookingWizard({ services, preselectedServiceId }: BookingWizardP
                   <input
                     type="email"
                     value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
+                    onChange={(e) => { setClientEmail(e.target.value); if (formErrors.client_email) setFormErrors({}); setAutofillNotice(null); }}
+                    onBlur={() => handleEmailBlur()}
                     placeholder="juan@example.com"
                     className="input-field pl-9"
                     autoComplete="email"
@@ -418,6 +462,18 @@ export function BookingWizard({ services, preselectedServiceId }: BookingWizardP
                 </div>
                 {formErrors.client_email && (
                   <p className="mt-1 text-xs text-red-600">{formErrors.client_email}</p>
+                )}
+                {autofillLoading && (
+                  <p className="mt-1 text-xs text-neutral-400 flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Checking for previous bookings...
+                  </p>
+                )}
+                {autofillNotice && (
+                  <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {autofillNotice}
+                  </p>
                 )}
                 <p className="mt-1 text-xs text-neutral-400">
                   We&apos;ll send your confirmation and manage-booking link here
