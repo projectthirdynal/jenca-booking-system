@@ -65,14 +65,33 @@ This keeps the "no account needed" promise from Section 3.2 while giving clients
 - **Services CRUD** — add/edit/remove services, set pricing, duration, upload service images
 - **Availability management** — set operating hours per day, block off holidays/blackout dates, set buffer time between appointments
 - **Booking rules** — minimum lead time (e.g. must book 2 hours ahead), max bookings per day
+- **Dashboard overview** — today's bookings count, upcoming appointments, revenue summary, active services count
 
-### 3.5 Mini-CMS (Content & Branding Management)
+### 3.5 Staff Management
+- **Staff profiles** — admin can add staff members with name, role, contact info, and status (active/inactive)
+- **Staff assignment** — assign bookings to specific staff members (optional; works without assignment for single-practitioner clinics)
+- **Staff scheduling** — set per-staff availability and working days *(future enhancement)*
+- **Access control** — staff login with limited dashboard access (view own bookings, mark completed/no-show) *(future enhancement)*
+
+### 3.6 Customer Database
+- **Customer records** — all client information (name, phone, email) automatically captured from bookings into a searchable customer database
+- **Customer history** — view all past and upcoming bookings per customer, including status and service history
+- **Returning customer detection** — system recognizes returning customers by email/phone and pre-fills their details on new bookings
+- **Booking recovery** — customers who lose their booking link can request it via email/phone without exposing other customers' data
+- **Search & filter** — search customers by name, phone, or email; filter by booking history
+
+### 3.7 Analytics & Tracking
+- **Dashboard analytics** — booking trends, revenue tracking, no-show rates, peak hours, and service popularity visualized in the admin dashboard
+- **Meta Pixel integration** — Meta (Facebook) Pixel tracking code installed on the public site to track booking conversions, page views, and customer journeys for ad optimization
+- **Vercel Analytics** — web vitals, traffic, and performance monitoring built-in
+
+### 3.8 Mini-CMS (Content & Branding Management)
 - **Image management** — upload/replace service photos, manage a clinic gallery, update banner images
 - **Text editing** — edit homepage headline, about section, promotions/announcements, contact info, footer text
 - **Branding customization** — upload/replace logo, choose from a defined set of accent color presets (applied site-wide), update banner images. *(A fully open color picker with live site-wide preview is deferred to a fast-follow update after launch — see Section 9 timeline note.)*
 - **No developer needed** — all content changes are done through the admin dashboard with a simple WYSIWYG editor and image uploader
 
-### 3.6 Legal & Compliance
+### 3.9 Legal & Compliance
 - Data privacy consent notice displayed at time of booking, compliant with the Philippine Data Privacy Act of 2012 (RA 10173)
 - Terms of service and cancellation policy displayed at booking
 - Client data (name, phone, email) stored securely, encrypted at rest via Supabase, and used only for booking-related communication
@@ -85,12 +104,10 @@ This keeps the "no account needed" promise from Section 3.2 while giving clients
 ## 4. Feature Scope — Phase 2 (Future / Optional)
 
 - **Online deposit or full payment** — integrate PayMongo/GCash/Maya at time of booking to reduce no-shows
-- **Staff/therapist logins** — each practitioner sees and manages their own schedule
-- **Client accounts** — repeat clients can register, log in, view booking history, and rebook faster
-- **Analytics dashboard** — booking trends, revenue tracking, no-show rates, peak hours
+- **Staff scheduling** — per-staff availability calendars and shift management
 - **WhatsApp integration** — send reminders/confirmations via WhatsApp in addition to SMS/email
 - **Multi-location support** — if the clinic expands to multiple branches
-- **Full branding color picker** — open, live-preview accent color customization (simplified to presets at launch; see Section 3.5)
+- **Full branding color picker** — open, live-preview accent color customization (simplified to presets at launch; see Section 3.8)
 
 ---
 
@@ -369,10 +386,14 @@ erDiagram
 - [ ] Integrate SMS notifications (Semaphore/Twilio) — confirmation + reminder + cancellation/reschedule
 - [ ] Build homepage, about section, gallery (content served from DB)
 
-### Week 3–4 — Admin Dashboard + Mini-CMS
+### Week 3–4 — Admin Dashboard + CMS + Analytics
 - [ ] Build bookings management view (calendar + list, cancel/reschedule/mark completed or no-show, flagged failed-notification view)
 - [ ] Build services CRUD (add/edit/remove, pricing, duration, image upload)
 - [ ] Build availability settings (operating hours per day, blackout dates, buffer time)
+- [ ] Build staff management (staff profiles, assignment to bookings)
+- [ ] Build customer database (searchable customer records, booking history per customer)
+- [ ] Build analytics dashboard (booking trends, revenue tracking, no-show rates, service popularity)
+- [ ] Install Meta Pixel tracking on public site (page views, booking conversions)
 - [ ] Build content editor (homepage text, about, promos, contact info — WYSIWYG)
 - [ ] Build image/media manager (upload, replace, delete — stored on Supabase Storage)
 - [ ] Build branding customizer — **v1 scope: logo upload + a curated set of accent color presets**; a full open color picker with live preview is scoped as a fast-follow rather than launch-blocking, to keep this two-week block realistic
@@ -389,9 +410,8 @@ erDiagram
 
 ### Post-Launch — Phase 2 (Optional, On-Demand)
 - [ ] Online payment integration (PayMongo/GCash/Maya)
-- [ ] Staff/therapist logins and assignment
-- [ ] Client accounts with booking history
-- [ ] Analytics dashboard
+- [ ] Staff scheduling — per-staff availability calendars and shift management
+- [ ] WhatsApp integration — reminders/confirmations via WhatsApp
 - [ ] Full branding color picker with live site-wide preview
 
 ---
@@ -412,11 +432,21 @@ erDiagram
 - Database migrations run via Supabase CLI on deploy
 - Instant rollback available from Vercel dashboard
 
-### Maintenance
+### Maintenance Plans
+
+The client can self-service all content, images, services, and branding through the admin dashboard without developer help. For technical maintenance, the following monthly retainer options are available:
+
+| Plan | Monthly Fee | Includes |
+|------|-------------|----------|
+| **Basic** | ₱1,500 | Database monitoring, automated backup verification, small content changes, dependency updates |
+| **Standard** | ₱2,000 | Everything in Basic + security updates, performance checks, priority email support |
+| **Premium** | ₱3,000 | Everything in Standard + additional feature development (scoped per request), monthly health report, phone support |
+
+All plans are month-to-month with no lock-in contract. The client can pause or cancel anytime. Emergency fixes outside the bug-fix warranty period are billed separately at an agreed hourly rate.
+
 - **Client self-service:** Admin updates all content, images, services, and branding through the dashboard — no developer needed
 - **Monitoring:** Vercel Analytics (web vitals, traffic, function logs) + Supabase Dashboard (DB health, storage usage, auth metrics)
 - **Backups:** Supabase Free tier includes daily automated backups; Pro tier adds point-in-time recovery
-- **Updates:** Dependency updates and security patches handled as needed (minimal for a simple app)
 
 ### Ongoing Costs (Infrastructure Only)
 - **Vercel hosting: Pro tier required, not Hobby.** Vercel's Terms of Service restrict the free Hobby plan to personal, non-commercial use — a deployment that fulfills a paid client engagement or takes bookings for a revenue-generating business counts as commercial use under their fair-use guidelines, even before Phase 2 payment integration goes live. Budget **$20/month** (single seat) from launch.
@@ -482,13 +512,16 @@ At project completion, the client receives a secure handoff document containing:
    - How to add/edit/remove services
    - How to view and manage bookings (cancel, reschedule, mark completed or no-show) and review flagged failed notifications
    - How to set operating hours and block off dates
+   - How to manage staff profiles and assign bookings
+   - How to search customers and view booking history
+   - How to read analytics (booking trends, revenue, no-show rates)
    - How to upload/replace images (service photos, gallery, logo, banners)
    - How to edit site text (homepage, about, promos, contact info)
    - How to choose brand color presets
    - What to do in the event of a data privacy inquiry or suspected breach
 2. **Recorded video tutorial** — screen recording of all admin tasks for future reference
 3. **Documentation** — written admin guide (PDF) with step-by-step instructions and screenshots
-4. **Post-handoff support** — 2 weeks of free bug-fix support after handoff; ongoing maintenance available as a separate arrangement
+4. **Post-handoff support** — 1 month of free bug-fix warranty after handoff; ongoing maintenance available via monthly retainer (Section 10 — Maintenance Plans)
 
 ### 11.6 Handoff Timeline
 
@@ -500,8 +533,8 @@ At project completion, the client receives a secure handoff document containing:
 | Credentials handoff document | Week 5 | Delivered with training |
 | Recorded video tutorial | Week 5 | Delivered with training |
 | Written admin guide (PDF) | Week 5 | Delivered with training |
-| 2-week post-handoff support window | Week 5–7 | Bug fixes only |
-| Full ownership transfer complete | End of Week 7 | Project closed |
+| 1-month post-handoff bug-fix warranty | Week 5–9 | Bug fixes only |
+| Full ownership transfer complete | End of Week 9 | Project closed |
 
 ---
 
@@ -547,17 +580,23 @@ Before development begins, we need the following from Jenca Aesthetics:
 
 The total development fee for the Phase 1 scope described in this proposal (Sections 3, 6–9) is:
 
-> **₱[XXX,XXX] — fixed total, all-inclusive**
+> **₱40,000 — fixed total, all-inclusive**
 
 This fee covers all design, development, testing, deployment, and handoff work described in the Build Roadmap (Section 9), including:
-- Public booking site, admin dashboard, and mini-CMS (Sections 3.1–3.5)
+- Custom booking system with multi-step wizard (Sections 3.1–3.2)
+- Admin CMS with dashboard, services, staff, and customer management (Sections 3.4–3.6)
+- Analytics dashboard and Meta Pixel integration (Section 3.7)
+- Mini-CMS for content and branding management (Section 3.8)
 - Notification integrations (email + SMS)
-- Guest self-service cancel/reschedule flow
-- QA, accessibility pass, and mobile responsiveness
+- Guest self-service cancel/reschedule flow with booking recovery
+- Mobile responsive design
+- Supabase setup and configuration
+- Deployment and SSL configuration
+- 1-year domain registration
 - Account setup, credential handoff, training, and documentation (Section 11)
-- 2 weeks of post-handoff bug-fix support
+- 1 month of post-handoff bug-fix warranty
 
-**This fee does not include** the ongoing infrastructure costs listed in Section 10 (Vercel Pro, Supabase, SMS credits, domain registration) or any Phase 2 features (Section 4). Those are billed separately, directly to Jenca Aesthetics, in accounts owned by the clinic from day one — see Section 13.2.
+**This fee does not include** the ongoing infrastructure costs listed in Section 10 (Vercel Pro, Supabase, SMS credits) or any Phase 2 features (Section 4). Those are billed separately, directly to Jenca Aesthetics, in accounts owned by the clinic from day one — see Section 13.2.
 
 ### 13.2 What's Billed Separately (Client-Paid, Not Part of the Fee Above)
 
@@ -567,7 +606,8 @@ This fee covers all design, development, testing, deployment, and handoff work d
 | Supabase | Supabase, directly to client | Free at launch; $25/month once usage grows | Free tier at launch |
 | SMS gateway (Semaphore) | Semaphore, directly to client | ~₱0.50–1.00/SMS (~₱1–2 per booking) | Week 2–3 (integration) |
 | Email (Resend) | Resend, directly to client | Free up to 3,000 emails/month | Week 2–3 (integration) |
-| Domain registration | Registrar, directly to client | ~₱1,000–1,500/year | Week 1 (registration) |
+| Domain registration | Included in project fee (1 year) | ₱0 (covered by developer) | Week 1 (registration) |
+| Domain renewal (after Year 1) | Registrar, directly to client | ~₱1,000–1,500/year | Year 2 renewal |
 
 Because every account is created and owned in Jenca Aesthetics' name from the start (Section 11.1), these costs are billed straight to the clinic by each provider — there's no markup added by the developer, and the clinic retains full control and visibility over its own operating costs going forward.
 
@@ -577,19 +617,19 @@ The development fee is invoiced across four milestones tied to the roadmap in Se
 
 | Milestone | Tied to | % of Total Fee |
 |---|---|---|
-| Project kickoff / signed agreement | Before Week 1 begins | 30% |
-| Public booking flow + notifications complete | End of Week 3 | 30% |
-| Admin dashboard + mini-CMS complete | End of Week 4 | 25% |
-| Final delivery, training & handoff | End of Week 5 | 15% |
+| Project kickoff / signed agreement | Before Week 1 begins | 30% (₱12,000) |
+| Public booking flow + notifications complete | End of Week 3 | 30% (₱12,000) |
+| Admin dashboard + CMS + analytics complete | End of Week 4 | 25% (₱10,000) |
+| Final delivery, training & handoff | End of Week 5 | 15% (₱6,000) |
 
 ### 13.4 Post-Handoff Support vs. Change Requests
 
-- **Included (free):** bug fixes for issues within the agreed Phase 1 scope, discovered within 2 weeks of handoff (Section 11.6).
+- **Included (free):** bug fixes for issues within the agreed Phase 1 scope, discovered within **1 month** of handoff.
 - **Not included:** new features, scope changes, or Phase 2 work (Section 4) requested after sign-off. These are quoted separately, either as a fixed add-on fee per feature or under a new agreement, once scoped.
-- **Ongoing maintenance beyond the 2-week window** (monitoring, minor updates, priority support) is available as a separate monthly retainer arrangement, to be discussed if the client wants it — not assumed or bundled into the fee above.
+- **Ongoing maintenance** beyond the 1-month warranty is available as a monthly retainer (Section 10 — Maintenance Plans), starting at ₱1,500/month. The client can choose a plan or opt out entirely — the system runs independently regardless.
 
 ---
 
 ### Prepared for: Jenca Aesthetics
-### Document version: 1.3 (added Section 13 — Investment & Pricing) (revised: Vercel Pro tier, guest cancel/reschedule flow, status enums & booking uniqueness constraint, spam protection, Data Privacy Act detail)
+### Document version: 2.0 (refactored: ₱40,000 fixed fee, 1-month warranty, 1-year domain included, staff management, customer database, analytics, Meta Pixel integration added to Phase 1, maintenance plans with ₱1,500–3,000/month pricing)
 ### Date: July 2026
